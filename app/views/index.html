@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>twi_media_getter</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+        <link rel="stylesheet" href="static/css/style.css">
+    </head>
+    <body>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+        <!-- ヘッダ -->
+        <div class="container-lg">
+            <header>
+                <h1>画像自動保存ツール</h1>
+            </header>
+        </div>
+
+        <hr>
+        <hr>
+
+        <div class="container-lg">
+            <!-- ユーザー登録/削除ボタン -->
+            <button type="button" class="btn btn-outline-primary mb-12" data-toggle="modal" data-target="#registration_modal">ユーザー登録</button>
+            <button type="button" class="btn btn-outline-danger mb-12" data-toggle="modal" data-target="#delete_modal">ユーザー削除</button>
+            <button type="button" class="btn btn-outline-secondary mb-12" data-toggle="modal" data-target="#registration_fromfile_modal">一括登録</button>
+
+            <!-- 表の記述 -->
+            <table border="1">
+                <tr>
+                    <th>ID</th>
+                    <th>userID</th>
+                    <th>取得した最新ツイート</th>
+                    <th>しきい値</th>
+                </tr>
+                {% for user in user_list %}
+                    <tr>
+                        <td>{{ user.user_id }}</td> <!-- 消す -->
+                        <td>{{ user.screen_name }}</td>
+                        <!-- 追加: アカウント名 -->
+                        <!-- 追加: 最終更新日時 -->
+                        <td>{{ user.latest_checked_tweet }}</td> <!-- 消す -->
+                        <td>{{ user.threshold }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <!-- ページ表示系ボタン -->
+            <button type="button" class="btn btn-outline-primary mb-12" data-toggle="modal" data-target="#undefind">ユーザー検索</button>
+            <!-- フッター -->
+            <footer class="fixed-bottom">
+                <p class="text-right">&copy; あぴす (<a href="https://twitter.com/apissQX70">@apissQX70</a>)</p>
+            </footer>
+
+        <!-- コンテナ終了 -->
+        </div>
+
+        <!-- ユーザー登録ボタンの内容 -->
+        <div class="modal fade" id="registration_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">登録画面</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form data-toggle="validator" id="registration_form" action="/" method="POST">
+                            <p>以下の値を入力して下さい</p>
+                            <input type="hidden" name="order_type" value="registration_order">
+                            <div class="control">
+                                <label for="screen_name">TwitterID <span class="badge badge-danger">必須</span> :</label>
+                                <input id="screen_name" type="text" placeholder="TwitterのIDを入力" name="userID" required>
+                            </div>
+                            <div class="control">
+                                <label for="threshold">しきい値 <span class="badge badge-Light">(default: 100)</span> :</label>
+                                <input id="threshold" type="text" value=100 name="threshold">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">閉じる</button>
+                        <button onclick="form_submit('registration_form')" type="submit" class="btn btn-primary">登録</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ユーザー削除ボタンの内容 -->
+        <div class="modal fade" id="delete_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">ユーザー削除</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="delete_form" action="/" method="POST">
+                            <p>以下の値を入力して下さい</p>
+                            <input type="hidden" name="order_type" value="delete_order">
+                            <div class="control">
+                                <label for="screen_name">TwitterID <span class="badge badge-danger">必須</span> :</label>
+                                <input id="screen_name" type="text" placeholder="TwitterのIDを入力" name="userID" required>
+                            </div>
+                            <div class="control">
+                                <label for="delete_folder">画像フォルダも削除 <span class="badge badge-Light">(default:false)</span> :</label>
+                                <input id="delete_folder" type="checkbox" name="delete_entire_folder">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">閉じる</button>
+                        <button onclick="form_submit('delete_form')" type="submit" class="btn btn-danger">削除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ファイルを使ったユーザー登録ボタンの内容 -->
+        <div class="modal fade" id="registration_fromfile_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">一括登録</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="registration_fromfile_form" action="/" method="POST">
+                            <p>ユーザーリストを送信してください。</p>
+                            <p>csvは以下の形式である必要があります</p>
+                            <ul>
+                                <li>先頭の行に[TwitterID]および[threshold]が記載されている</li>
+                            </ul>
+                            <p>また、以下の点に注意してください</p>
+                            <ul>
+                                <li>thresholdが空欄の場合デフォルトになる</li>
+                            </ul>
+                            <input type="hidden" name="order_type" value="registration_fromfile_order">
+                            <input type="file" id="userlist_file" name="userlist_file" accept=".csv" required>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">閉じる</button>
+                        <button onclick="form_submit('registration_fromfile_form')" type="submit" class="btn btn-primary">登録</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- フォーム送信スクリプト -->
+        <script type="text/javascript">
+            function form_submit(name) {
+                document.getElementById(name).submit();
+            }
+        </script>
+    </body>
+</html>
